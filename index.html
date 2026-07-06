@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sattapibal Quiz</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Kanit', 'sans-serif'],
+            display: ['Prompt', 'sans-serif'],
+          },
+          colors: {
+            pastel: {
+              pink: '#ffb3c6',
+              purple: '#c8b6ff',
+              blue: '#a2d2ff',
+              green: '#b7e4c7',
+              yellow: '#fdfbc4'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-pastel-pink via-pastel-purple to-pastel-blue min-h-screen text-gray-800 font-sans antialiased flex items-center justify-center p-4">
+
+  <!-- Main Container -->
+  <main class="w-full max-w-md glass-card rounded-3xl p-6 shadow-2xl relative overflow-hidden transition-all duration-300">
+    
+    <!-- Loader -->
+    <div id="loader" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-4 border-pastel-purple border-t-transparent mb-4"></div>
+      <p class="text-gray-600 font-medium animate-pulse" id="loader-text">กำลังโหลด...</p>
+    </div>
+
+    <!-- Section: Home -->
+    <section id="home-section" class="flex flex-col items-center text-center space-y-6 fade-in">
+      <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-inner mb-2 floating">
+        <i class="fa-solid fa-brain text-4xl text-pastel-purple"></i>
+      </div>
+      <h1 class="text-2xl font-display font-bold text-gray-800 leading-tight">
+        ขอเชิญร่วมกิจกรรมตอบปัญหา<br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500 text-3xl">Sattapibal Quiz</span>
+      </h1>
+      
+      <div class="w-full space-y-4 pt-4">
+        <div class="text-left">
+          <label class="block text-sm font-medium text-gray-700 mb-1 ml-2">กรุณากรอกชื่อผู้เข้ากิจกรรม</label>
+          <input type="text" id="username-input" placeholder="ชื่อ-นามสกุล หรือ ชื่อเล่น" class="w-full px-5 py-3 rounded-2xl border-none ring-2 ring-white/50 bg-white/50 focus:bg-white focus:ring-pastel-purple outline-none transition-all placeholder-gray-400">
+        </div>
+        
+        <button id="start-scan-btn" class="w-full group bg-gradient-to-r from-indigo-400 to-purple-400 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-qrcode group-hover:rotate-12 transition"></i>
+          <span>สแกน QR Code เริ่มควิซ</span>
+        </button>
+      </div>
+
+      <button id="go-to-leaderboard-btn" class="text-sm text-gray-500 hover:text-purple-600 underline mt-4 transition">ดูผลคะแนนสอบ (สำหรับเจ้าหน้าที่)</button>
+    </section>
+
+    <!-- Section: Scanner -->
+    <section id="scanner-section" class="hidden flex-col items-center space-y-4 fade-in">
+      <h2 class="text-xl font-bold font-display text-gray-800">สแกนรหัสชุดคำถาม</h2>
+      <p class="text-sm text-gray-600 text-center">หันกล้องไปที่ QR Code เพื่อเริ่มทำแบบทดสอบ</p>
+      
+      <div class="w-full rounded-2xl overflow-hidden shadow-inner border-4 border-white/50 bg-black relative" id="reader-container">
+        <div id="reader" class="w-full"></div>
+      </div>
+      
+      <button id="cancel-scan-btn" class="w-full bg-white/50 hover:bg-white text-gray-700 font-semibold py-3 rounded-2xl transition shadow">
+        ยกเลิก
+      </button>
+    </section>
+
+    <!-- Section: Quiz -->
+    <section id="quiz-section" class="hidden flex-col space-y-6 fade-in h-full">
+      <div class="flex justify-between items-center border-b border-gray-200/50 pb-4">
+        <div>
+          <p class="text-xs text-gray-500 uppercase tracking-wider font-bold">Question</p>
+          <h3 class="text-lg font-bold text-gray-800" id="question-indicator">1 / 10</h3>
+        </div>
+        <div class="bg-white/60 px-4 py-2 rounded-xl flex items-center space-x-2 shadow-sm border border-white">
+          <i class="fa-regular fa-clock text-pastel-purple"></i>
+          <span class="font-mono font-bold text-lg text-gray-700" id="timer-display">00:00</span>
+        </div>
+      </div>
+      
+      <div class="flex-grow flex flex-col justify-center py-4">
+        <h2 class="text-xl md:text-2xl font-medium text-gray-800 leading-relaxed text-center mb-6" id="question-text">
+          Loading question...
+        </h2>
+        
+        <div class="space-y-3" id="choices-container">
+          <!-- Choices will be injected here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Result -->
+    <section id="result-section" class="hidden flex-col items-center text-center space-y-6 fade-in py-8">
+      <div class="w-28 h-28 bg-gradient-to-tr from-yellow-300 to-pastel-yellow rounded-full flex items-center justify-center shadow-lg mb-2 mx-auto bounce-in">
+        <i class="fa-solid fa-trophy text-5xl text-yellow-600"></i>
+      </div>
+      
+      <div>
+        <h2 class="text-3xl font-display font-bold text-gray-800">ทำแบบทดสอบเสร็จสิ้น!</h2>
+        <p class="text-gray-600 mt-2" id="result-username">คุณ ...</p>
+      </div>
+      
+      <div class="w-full grid grid-cols-2 gap-4 my-4">
+        <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm flex flex-col items-center">
+          <span class="text-sm text-gray-500 font-medium">คะแนนของคุณ</span>
+          <span class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-500" id="result-score">0</span>
+        </div>
+        <div class="bg-white/60 p-4 rounded-2xl border border-white shadow-sm flex flex-col items-center">
+          <span class="text-sm text-gray-500 font-medium">เวลาที่ใช้</span>
+          <span class="text-3xl font-bold text-gray-700" id="result-time">00:00</span>
+        </div>
+      </div>
+      
+      <button id="back-home-btn" class="w-full bg-white hover:bg-gray-50 text-gray-800 font-semibold py-4 rounded-2xl shadow-md transition transform hover:scale-105">
+        กลับหน้าแรก
+      </button>
+    </section>
+
+    <!-- Section: Leaderboard Auth -->
+    <section id="leaderboard-auth-section" class="hidden flex-col items-center text-center space-y-6 fade-in py-8">
+      <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-inner mb-2 mx-auto">
+        <i class="fa-solid fa-lock text-3xl text-gray-400"></i>
+      </div>
+      <h2 class="text-2xl font-display font-bold text-gray-800">ผลการสอบ</h2>
+      <p class="text-sm text-gray-600">กรุณาใส่รหัสผ่านเพื่อเข้าดูผลคะแนน</p>
+      
+      <div class="w-full space-y-4">
+        <input type="password" id="password-input" placeholder="รหัสผ่าน" class="w-full px-5 py-3 rounded-2xl text-center tracking-widest border-none ring-2 ring-white/50 bg-white/50 focus:bg-white focus:ring-pastel-purple outline-none transition-all">
+        <div id="password-error" class="text-red-500 text-sm hidden">รหัสผ่านไม่ถูกต้อง</div>
+        <button id="auth-submit-btn" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 rounded-2xl shadow-md transition">
+          เข้าสู่ระบบ
+        </button>
+        <button id="auth-cancel-btn" class="w-full bg-transparent text-gray-500 hover:text-gray-700 font-medium py-2 transition">
+          ยกเลิก
+        </button>
+      </div>
+    </section>
+
+    <!-- Section: Leaderboard -->
+    <section id="leaderboard-section" class="hidden flex-col space-y-4 fade-in">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-2xl font-display font-bold text-gray-800">Leaderboard</h2>
+        <button id="close-leaderboard-btn" class="w-8 h-8 bg-white/50 rounded-full flex items-center justify-center hover:bg-white transition text-gray-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <div class="w-full bg-white/60 rounded-2xl border border-white overflow-hidden shadow-sm">
+        <div class="max-h-80 overflow-y-auto custom-scrollbar">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs text-gray-500 uppercase bg-gray-50/50 sticky top-0 backdrop-blur-md">
+              <tr>
+                <th scope="col" class="px-4 py-3">อันดับ</th>
+                <th scope="col" class="px-4 py-3">ชื่อ</th>
+                <th scope="col" class="px-4 py-3 text-center">คะแนน</th>
+                <th scope="col" class="px-4 py-3 text-center">เวลา</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body" class="divide-y divide-gray-100">
+              <!-- Data injected here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex justify-center pt-2">
+         <button id="refresh-leaderboard-btn" class="text-sm bg-white/50 hover:bg-white px-4 py-2 rounded-full text-gray-600 shadow-sm transition flex items-center space-x-2">
+           <i class="fa-solid fa-rotate-right"></i> <span>รีเฟรช</span>
+         </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- HTML5 QR Code Library -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <!-- Application Logic -->
+  <script src="main.js"></script>
+</body>
+</html>
