@@ -187,17 +187,116 @@
           </table>
         </div>
       </div>
-      <div class="flex justify-center pt-2">
+      <div class="flex flex-wrap justify-center gap-2 pt-2">
          <button id="refresh-leaderboard-btn" class="text-sm bg-white/50 hover:bg-white px-4 py-2 rounded-full text-gray-600 shadow-sm transition flex items-center space-x-2">
            <i class="fa-solid fa-rotate-right"></i> <span>รีเฟรช</span>
          </button>
+         <button id="go-manage-quiz-btn" class="text-sm bg-white/50 hover:bg-white px-4 py-2 rounded-full text-gray-600 shadow-sm transition flex items-center space-x-2">
+           <i class="fa-solid fa-pen-to-square"></i> <span>จัดการข้อสอบ</span>
+         </button>
+         <button id="go-select-quiz-btn" class="text-sm bg-white/50 hover:bg-white px-4 py-2 rounded-full text-gray-600 shadow-sm transition flex items-center space-x-2">
+           <i class="fa-solid fa-qrcode"></i> <span>เลือกชุด Quiz</span>
+         </button>
+      </div>
+    </section>
+
+    <!-- Section: Select Quiz -->
+    <section id="select-quiz-section" class="hidden flex-col items-center space-y-4 fade-in py-4">
+      <div class="flex justify-between items-center w-full mb-2">
+        <h2 class="text-2xl font-display font-bold text-gray-800">เลือกชุด Quiz</h2>
+        <button id="close-select-quiz-btn" class="w-8 h-8 bg-white/50 rounded-full flex items-center justify-center hover:bg-white transition text-gray-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="text-sm text-gray-600 text-center w-full">เลือกชุดคำถามเพื่อสร้าง QR Code สำหรับผู้เข้าร่วม</p>
+      
+      <select id="quiz-dropdown" class="w-full px-5 py-3 rounded-2xl border-none ring-2 ring-white/50 bg-white/50 focus:bg-white focus:ring-pastel-purple outline-none transition-all text-gray-700">
+        <option value="">-- กำลังโหลด... --</option>
+      </select>
+      
+      <div class="bg-white p-4 rounded-3xl shadow-md border-4 border-pastel-purple mt-4">
+        <div id="qrcode-display" class="flex justify-center items-center w-[200px] h-[200px] bg-gray-50 rounded-xl">
+           <span class="text-gray-400 text-sm">เลือกชุดข้อสอบด้านบน</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Manage Quiz -->
+    <section id="manage-quiz-section" class="hidden flex-col space-y-4 fade-in py-2 h-full">
+      <div class="flex justify-between items-center w-full mb-2">
+        <h2 class="text-2xl font-display font-bold text-gray-800">จัดการข้อสอบ</h2>
+        <button id="close-manage-quiz-btn" class="w-8 h-8 bg-white/50 rounded-full flex items-center justify-center hover:bg-white transition text-gray-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <!-- List View -->
+      <div id="mq-list-view" class="w-full flex flex-col space-y-2">
+        <button id="mq-create-new-btn" class="w-full bg-gradient-to-r from-pastel-blue to-pastel-purple text-white font-bold py-3 rounded-xl shadow-sm hover:opacity-90 transition">
+          + สร้างชุดข้อสอบใหม่
+        </button>
+        <div class="w-full bg-white/60 rounded-xl border border-white overflow-hidden shadow-sm p-2 max-h-72 overflow-y-auto custom-scrollbar" id="mq-quiz-list">
+           <div class="text-center text-sm text-gray-500 py-4">กำลังโหลด...</div>
+        </div>
+      </div>
+      
+      <!-- Quiz Form View -->
+      <div id="mq-quiz-form-view" class="w-full hidden flex-col space-y-3 bg-white/80 p-4 rounded-xl shadow-inner max-h-full overflow-y-auto custom-scrollbar">
+        <h3 class="font-bold text-gray-800" id="mq-form-title">สร้าง/แก้ไขชุดข้อสอบ</h3>
+        <input type="text" id="mq-f-id" placeholder="รหัส (เช่น SP001)" class="w-full px-3 py-2 rounded-xl text-sm ring-1 ring-white/50 bg-white focus:outline-none focus:ring-pastel-purple">
+        <input type="text" id="mq-f-type" placeholder="ประเภท (เช่น ศีล)" class="w-full px-3 py-2 rounded-xl text-sm ring-1 ring-white/50 bg-white focus:outline-none focus:ring-pastel-purple">
+        <input type="text" id="mq-f-title" placeholder="ชื่อชุดข้อสอบ" class="w-full px-3 py-2 rounded-xl text-sm ring-1 ring-white/50 bg-white focus:outline-none focus:ring-pastel-purple">
+        <input type="text" id="mq-f-desc" placeholder="คำอธิบาย" class="w-full px-3 py-2 rounded-xl text-sm ring-1 ring-white/50 bg-white focus:outline-none focus:ring-pastel-purple">
+        <select id="mq-f-status" class="w-full px-3 py-2 rounded-xl text-sm ring-1 ring-white/50 bg-white focus:outline-none focus:ring-pastel-purple">
+           <option value="Active">Active</option>
+           <option value="Inactive">Inactive</option>
+        </select>
+        <div class="flex space-x-2 pt-2">
+          <button id="mq-f-save-btn" class="flex-1 bg-green-400 hover:bg-green-500 text-white rounded-xl py-2 text-sm font-bold shadow-sm transition">บันทึก</button>
+          <button id="mq-f-cancel-btn" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl py-2 text-sm font-bold shadow-sm transition">ยกเลิก</button>
+        </div>
+        <button id="mq-f-manage-q-btn" class="w-full bg-pastel-purple hover:bg-purple-400 text-white rounded-xl py-2 text-sm font-bold mt-2 shadow-sm transition">จัดการคำถามในชุดนี้</button>
+      </div>
+      
+      <!-- Question Form View Modal -->
+      <div id="mq-question-form-view" class="hidden absolute inset-0 z-[60] flex-col bg-white/95 backdrop-blur-md p-4 overflow-y-auto custom-scrollbar">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="font-bold text-gray-800 text-lg" id="mq-q-form-title">คำถามในชุด ...</h3>
+          <button id="mq-q-close-btn" class="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-500 rounded-full flex items-center justify-center font-bold transition">
+             <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        
+        <div id="mq-q-list" class="space-y-2 mb-4">
+           <!-- Q List -->
+        </div>
+        
+        <div class="bg-gray-50 p-4 rounded-xl shadow-inner border border-gray-100 flex flex-col space-y-2">
+          <h4 class="font-bold text-sm text-pastel-purple mb-1">เพิ่ม/แก้ไขคำถาม</h4>
+          <input type="hidden" id="mq-q-id">
+          <input type="number" id="mq-q-num" placeholder="ข้อที่ (เช่น 1)" class="w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-pastel-purple">
+          <textarea id="mq-q-text" placeholder="คำถาม..." class="w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-pastel-purple h-16"></textarea>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="mq-q-c1" placeholder="ตัวเลือก 1" class="w-full px-3 py-1.5 rounded-lg text-sm border focus:outline-none focus:border-pastel-purple">
+            <input type="text" id="mq-q-c2" placeholder="ตัวเลือก 2" class="w-full px-3 py-1.5 rounded-lg text-sm border focus:outline-none focus:border-pastel-purple">
+            <input type="text" id="mq-q-c3" placeholder="ตัวเลือก 3" class="w-full px-3 py-1.5 rounded-lg text-sm border focus:outline-none focus:border-pastel-purple">
+            <input type="text" id="mq-q-c4" placeholder="ตัวเลือก 4" class="w-full px-3 py-1.5 rounded-lg text-sm border focus:outline-none focus:border-pastel-purple">
+          </div>
+          <input type="text" id="mq-q-ans" placeholder="เฉลย (ก๊อปปี้ตัวเลือกมาวางให้ตรงเป๊ะ)" class="w-full px-3 py-2 rounded-lg text-sm border-2 border-green-300 focus:outline-none focus:border-green-500 bg-green-50">
+          <div class="flex space-x-2 pt-2">
+            <button id="mq-q-save-btn" class="flex-1 bg-green-500 hover:bg-green-600 text-white rounded-lg py-2 text-sm font-bold shadow-sm transition">บันทึกข้อนี้</button>
+            <button id="mq-q-clear-btn" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg py-2 text-sm font-bold shadow-sm transition">เคลียร์ฟอร์ม</button>
+          </div>
+        </div>
       </div>
     </section>
 
   </main>
 
-  <!-- HTML5 QR Code Library -->
+  <!-- Libraries -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
   <!-- Application Logic -->
   <script src="main.js"></script>
 </body>
