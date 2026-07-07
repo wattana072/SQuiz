@@ -21,7 +21,8 @@ let state = {
   admin: {
     quizSets: [],
     questions: [],
-    currentQuizId: null
+    currentQuizId: null,
+    leaderboardData: []
   }
 };
 
@@ -40,7 +41,6 @@ const DOM = {
     result: document.getElementById('result-section'),
     leaderboardAuth: document.getElementById('leaderboard-auth-section'),
     leaderboard: document.getElementById('leaderboard-section'),
-    selectQuiz: document.getElementById('select-quiz-section'),
     manageQuiz: document.getElementById('manage-quiz-section'),
   },
   inputs: {
@@ -57,8 +57,6 @@ const DOM = {
     closeLeaderboard: document.getElementById('close-leaderboard-btn'),
     refreshLeaderboard: document.getElementById('refresh-leaderboard-btn'),
     goManageQuiz: document.getElementById('go-manage-quiz-btn'),
-    goSelectQuiz: document.getElementById('go-select-quiz-btn'),
-    closeSelectQuiz: document.getElementById('close-select-quiz-btn'),
     closeManageQuiz: document.getElementById('close-manage-quiz-btn'),
   },
   quiz: {
@@ -77,8 +75,12 @@ const DOM = {
     error: document.getElementById('password-error')
   },
   admin: {
-    quizDropdown: document.getElementById('quiz-dropdown'),
+    quizDropdown: document.getElementById('lb-quiz-dropdown'),
     qrcodeDisplay: document.getElementById('qrcode-display'),
+    tabLeaderboard: document.getElementById('tab-leaderboard'),
+    tabQrcode: document.getElementById('tab-qrcode'),
+    viewLeaderboard: document.getElementById('view-leaderboard'),
+    viewQrcode: document.getElementById('view-qrcode'),
     mqListView: document.getElementById('mq-list-view'),
     mqQuizList: document.getElementById('mq-quiz-list'),
     mqCreateNewBtn: document.getElementById('mq-create-new-btn'),
@@ -189,13 +191,27 @@ DOM.buttons.closeManageQuiz.addEventListener('click', () => {
   showSection('leaderboard');
 });
 
-DOM.buttons.goSelectQuiz.addEventListener('click', () => {
-  showSection('selectQuiz');
-  loadSelectQuizDropdown();
+// Tab Listeners
+DOM.admin.tabLeaderboard.addEventListener('click', () => {
+  DOM.admin.tabLeaderboard.classList.remove('text-gray-400', 'border-transparent');
+  DOM.admin.tabLeaderboard.classList.add('text-gray-800', 'border-black');
+  
+  DOM.admin.tabQrcode.classList.remove('text-gray-800', 'border-black');
+  DOM.admin.tabQrcode.classList.add('text-gray-400', 'border-transparent');
+  
+  DOM.admin.viewLeaderboard.classList.remove('hidden');
+  DOM.admin.viewQrcode.classList.add('hidden');
 });
 
-DOM.buttons.closeSelectQuiz.addEventListener('click', () => {
-  showSection('leaderboard');
+DOM.admin.tabQrcode.addEventListener('click', () => {
+  DOM.admin.tabQrcode.classList.remove('text-gray-400', 'border-transparent');
+  DOM.admin.tabQrcode.classList.add('text-gray-800', 'border-black');
+  
+  DOM.admin.tabLeaderboard.classList.remove('text-gray-800', 'border-black');
+  DOM.admin.tabLeaderboard.classList.add('text-gray-400', 'border-transparent');
+  
+  DOM.admin.viewQrcode.classList.remove('hidden');
+  DOM.admin.viewLeaderboard.classList.add('hidden');
 });
 
 // ==========================================
@@ -399,20 +415,28 @@ async function submitQuizResult() {
 // LEADERBOARD LOGIC
 // ==========================================
 async function loadLeaderboard() {
-  showLoader('กำลังโหลดกระดานคะแนน...');
+  showLoader('กำลังโหลดข้อมูล...');
   showSection('leaderboard');
   
   DOM.leaderboard.body.innerHTML = '<tr><td colspan="4" class="text-center py-4">กำลังโหลด...</td></tr>';
   
   try {
-    const url = `${API_URL}?action=getLeaderboard`;
-    const response = await fetch(url);
-    const data = await response.json();
+    // Fetch both Leaderboard and QuizSets
+    const [lbResponse, qzResponse] = await Promise.all([
+      fetch(`${API_URL}?action=getLeaderboard`),
+      fetch(`${API_URL}?action=getAllQuizSets`)
+    ]);
+    
+    const lbData = await lbResponse.json();
+    const qzData = await qzResponse.json();
 
-    if (data.status === 'success') {
-      renderLeaderboard(data.leaderboard);
+    if (lbData.status === 'success' && qzData.status === 'success') {
+      state.admin.leaderboardData = lbData.leaderboard;
+      state.admin.quizSets = qzData.quizSets.filter(q => q.Status === 'Active');
+      
+      populateLeaderboardDropdown();
     } else {
-      DOM.leaderboard.body.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">เกิดข้อผิดพลาด: ${data.message}</td></tr>`;
+      DOM.leaderboard.body.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">เกิดข้อผิดพลาด</td></tr>`;
     }
   } catch (error) {
     console.error(error);
@@ -422,15 +446,59 @@ async function loadLeaderboard() {
   }
 }
 
-function renderLeaderboard(data) {
+function populateLeaderboardDropdown() {
+  DOM.admin.quizDropdown.innerHTML = '<option value="">-- กรุณาเลือก --</option>';
+  state.admin.quizSets.forEach(q => {
+    const opt = document.createElement('option');
+    opt.value = q.QuizsetID;
+    opt.innerText = `${q.QuizsetID}: ${q.Title}`;
+    DOM.admin.quizDropdown.appendChild(opt);
+  });
+  
+  // Render empty state initially
+  renderLeaderboard('');
+  
+  DOM.admin.quizDropdown.onchange = (e) => {
+    const selectedQuizId = e.target.value;
+    renderLeaderboard(selectedQuizId);
+    generateQRCode(selectedQuizId);
+  };
+}
+
+function generateQRCode(quizId) {
+  if (!quizId) {
+    DOM.admin.qrcodeDisplay.innerHTML = '<span class="text-gray-400 text-sm">กรุณาเลือกชุดข้อสอบ</span>';
+    return;
+  }
+  
+  DOM.admin.qrcodeDisplay.innerHTML = '';
+  if (qrcodeObj) qrcodeObj.clear();
+  qrcodeObj = new QRCode(DOM.admin.qrcodeDisplay, {
+    text: quizId,
+    width: 200,
+    height: 200,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+}
+
+function renderLeaderboard(quizId) {
   DOM.leaderboard.body.innerHTML = '';
   
-  if (data.length === 0) {
-    DOM.leaderboard.body.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">ยังไม่มีข้อมูล</td></tr>';
+  if (!quizId) {
+    DOM.leaderboard.body.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-gray-400 font-medium">กรุณาเลือกชุดข้อสอบด้านบน เพื่อดูผลคะแนน</td></tr>';
+    return;
+  }
+  
+  const filteredData = state.admin.leaderboardData.filter(d => d.quizsetId === quizId);
+  
+  if (filteredData.length === 0) {
+    DOM.leaderboard.body.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-gray-500">ยังไม่มีผู้เข้าร่วมในชุดข้อสอบนี้</td></tr>';
     return;
   }
 
-  data.forEach((entry, index) => {
+  filteredData.forEach((entry, index) => {
     const tr = document.createElement('tr');
     tr.className = "hover:bg-white/50 transition";
     
@@ -465,57 +533,6 @@ DOM.inputs.username.focus();
 // ==========================================
 
 let qrcodeObj = null;
-
-async function loadSelectQuizDropdown() {
-  DOM.admin.quizDropdown.innerHTML = '<option value="">-- กำลังโหลด... --</option>';
-  DOM.admin.qrcodeDisplay.innerHTML = '<span class="text-gray-400 text-sm">เลือกชุดข้อสอบด้านบน</span>';
-  
-  try {
-    const url = `${API_URL}?action=getAllQuizSets`;
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.status === 'success') {
-      const activeQuizzes = data.quizSets.filter(q => q.Status === 'Active');
-      
-      if (activeQuizzes.length === 0) {
-        DOM.admin.quizDropdown.innerHTML = '<option value="">-- ไม่มีชุดข้อสอบที่เปิดใช้งาน --</option>';
-        return;
-      }
-      
-      DOM.admin.quizDropdown.innerHTML = '<option value="">-- กรุณาเลือก --</option>';
-      activeQuizzes.forEach(q => {
-        const opt = document.createElement('option');
-        opt.value = q.QuizsetID;
-        opt.innerText = `${q.QuizsetID}: ${q.Title}`;
-        DOM.admin.quizDropdown.appendChild(opt);
-      });
-      
-      DOM.admin.quizDropdown.onchange = (e) => {
-        const val = e.target.value;
-        if (!val) {
-          DOM.admin.qrcodeDisplay.innerHTML = '<span class="text-gray-400 text-sm">เลือกชุดข้อสอบด้านบน</span>';
-          return;
-        }
-        
-        DOM.admin.qrcodeDisplay.innerHTML = '';
-        if (qrcodeObj) qrcodeObj.clear();
-        qrcodeObj = new QRCode(DOM.admin.qrcodeDisplay, {
-          text: val,
-          width: 200,
-          height: 200,
-          colorDark : "#000000",
-          colorLight : "#ffffff",
-          correctLevel : QRCode.CorrectLevel.H
-        });
-      };
-      
-    }
-  } catch (err) {
-    console.error(err);
-    DOM.admin.quizDropdown.innerHTML = '<option value="">เกิดข้อผิดพลาด</option>';
-  }
-}
 
 async function loadAdminQuizSets() {
   showLoader('กำลังโหลดชุดข้อสอบ...');
