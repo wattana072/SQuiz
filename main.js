@@ -2,8 +2,7 @@
 // CONFIGURATION
 // ==========================================
 // ⚠️ สำคัญ: นำ URL ของ Web App จาก Google Apps Script มาใส่ที่นี่
-const API_URL = 'https://script.google.com/macros/s/AKfycbwFM1PHTudS1UZ-YnBCVzyM3IWWMgalNic-63XznUFUhoxUjy3q-xqbyhTNP3tuPJfmUg/exec';
-const LEADERBOARD_PASSWORD = '072072';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwosBcoMbmu2VKDnqjkCEbisCdR8VavxWCbXCHOYk83EGN3q6TXUFR2-YbIF5bK2JM1Bg/exec';
 
 // ==========================================
 // STATE VARIABLES
@@ -58,6 +57,9 @@ const DOM = {
     refreshLeaderboard: document.getElementById('refresh-leaderboard-btn'),
     goManageQuiz: document.getElementById('go-manage-quiz-btn'),
     closeManageQuiz: document.getElementById('close-manage-quiz-btn'),
+    goChangePassword: document.getElementById('go-change-password-btn'),
+    cpSaveBtn: document.getElementById('cp-save-btn'),
+    cpCancelBtn: document.getElementById('cp-cancel-btn')
   },
   quiz: {
     indicator: document.getElementById('question-indicator'),
@@ -81,6 +83,10 @@ const DOM = {
     tabQrcode: document.getElementById('tab-qrcode'),
     viewLeaderboard: document.getElementById('view-leaderboard'),
     viewQrcode: document.getElementById('view-qrcode'),
+    cpModal: document.getElementById('change-password-modal'),
+    cpCurrentPassword: document.getElementById('cp-current-password'),
+    cpNewPassword: document.getElementById('cp-new-password'),
+    cpError: document.getElementById('cp-error'),
     mqListView: document.getElementById('mq-list-view'),
     mqQuizList: document.getElementById('mq-quiz-list'),
     mqCreateNewBtn: document.getElementById('mq-create-new-btn'),
@@ -160,13 +166,39 @@ DOM.buttons.authCancel.addEventListener('click', () => {
   showSection('home');
 });
 
-DOM.buttons.authSubmit.addEventListener('click', () => {
-  if (DOM.inputs.password.value === LEADERBOARD_PASSWORD) {
-    DOM.inputs.password.value = '';
-    DOM.leaderboard.error.classList.add('hidden');
-    loadLeaderboard();
-  } else {
+DOM.buttons.authSubmit.addEventListener('click', async () => {
+  const password = DOM.inputs.password.value;
+  if (!password) {
+    DOM.leaderboard.error.innerText = 'กรุณากรอกรหัสผ่าน';
     DOM.leaderboard.error.classList.remove('hidden');
+    return;
+  }
+  
+  DOM.buttons.authSubmit.innerText = 'กำลังตรวจสอบ...';
+  DOM.buttons.authSubmit.disabled = true;
+  DOM.leaderboard.error.classList.add('hidden');
+  
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'login', password: password }),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    });
+    const data = await response.json();
+    
+    if (data.status === 'success') {
+      DOM.inputs.password.value = '';
+      loadLeaderboard();
+    } else {
+      DOM.leaderboard.error.innerText = data.message || 'รหัสผ่านไม่ถูกต้อง';
+      DOM.leaderboard.error.classList.remove('hidden');
+    }
+  } catch (err) {
+    DOM.leaderboard.error.innerText = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+    DOM.leaderboard.error.classList.remove('hidden');
+  } finally {
+    DOM.buttons.authSubmit.innerText = 'เข้าสู่ระบบ';
+    DOM.buttons.authSubmit.disabled = false;
   }
 });
 
@@ -189,6 +221,60 @@ DOM.buttons.goManageQuiz.addEventListener('click', () => {
 
 DOM.buttons.closeManageQuiz.addEventListener('click', () => {
   showSection('leaderboard');
+});
+
+// Change Password Event Listeners
+DOM.buttons.goChangePassword.addEventListener('click', () => {
+  DOM.admin.cpCurrentPassword.value = '';
+  DOM.admin.cpNewPassword.value = '';
+  DOM.admin.cpError.classList.add('hidden');
+  DOM.admin.cpModal.classList.remove('hidden');
+});
+
+DOM.buttons.cpCancelBtn.addEventListener('click', () => {
+  DOM.admin.cpModal.classList.add('hidden');
+});
+
+DOM.buttons.cpSaveBtn.addEventListener('click', async () => {
+  const currentPassword = DOM.admin.cpCurrentPassword.value;
+  const newPassword = DOM.admin.cpNewPassword.value;
+  
+  if (!currentPassword || !newPassword) {
+    DOM.admin.cpError.innerText = 'กรุณากรอกรหัสผ่านให้ครบถ้วน';
+    DOM.admin.cpError.classList.remove('hidden');
+    return;
+  }
+  
+  DOM.buttons.cpSaveBtn.innerText = 'กำลังบันทึก...';
+  DOM.buttons.cpSaveBtn.disabled = true;
+  DOM.admin.cpError.classList.add('hidden');
+  
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        action: 'changePassword', 
+        currentPassword: currentPassword,
+        newPassword: newPassword
+      }),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    });
+    const data = await response.json();
+    
+    if (data.status === 'success') {
+      alert('เปลี่ยนรหัสผ่านสำเร็จ!');
+      DOM.admin.cpModal.classList.add('hidden');
+    } else {
+      DOM.admin.cpError.innerText = data.message || 'รหัสผ่านปัจจุบันไม่ถูกต้อง';
+      DOM.admin.cpError.classList.remove('hidden');
+    }
+  } catch (err) {
+    DOM.admin.cpError.innerText = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+    DOM.admin.cpError.classList.remove('hidden');
+  } finally {
+    DOM.buttons.cpSaveBtn.innerText = 'บันทึก';
+    DOM.buttons.cpSaveBtn.disabled = false;
+  }
 });
 
 // Tab Listeners

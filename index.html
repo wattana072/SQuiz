@@ -218,8 +218,36 @@
          <button id="go-manage-quiz-btn" class="flex-1 bg-white/60 hover:bg-white py-3 rounded-2xl text-gray-700 font-medium shadow-sm transition flex items-center justify-center space-x-2">
            <i class="fa-solid fa-pen-to-square"></i> <span>จัดการข้อสอบ</span>
          </button>
+         <button id="go-change-password-btn" class="flex-[0.5] bg-white/60 hover:bg-white py-3 rounded-2xl text-gray-700 font-medium shadow-sm transition flex items-center justify-center">
+           <i class="fa-solid fa-key"></i>
+         </button>
       </div>
     </section>
+
+    <!-- Modal: Change Password -->
+    <div id="change-password-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-sm fade-in">
+      <div class="bg-white rounded-3xl p-6 shadow-xl w-full max-w-sm">
+        <h3 class="text-xl font-display font-bold text-gray-800 mb-4">เปลี่ยนรหัสผ่าน</h3>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่านปัจจุบัน</label>
+            <input type="password" id="cp-current-password" class="w-full px-4 py-2 rounded-xl text-sm border focus:outline-none focus:border-pastel-purple bg-gray-50">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่านใหม่</label>
+            <input type="password" id="cp-new-password" class="w-full px-4 py-2 rounded-xl text-sm border focus:outline-none focus:border-pastel-purple bg-gray-50">
+          </div>
+          
+          <div id="cp-error" class="text-red-500 text-sm hidden">รหัสผ่านไม่ถูกต้อง</div>
+          
+          <div class="flex space-x-2 pt-2">
+            <button id="cp-save-btn" class="flex-1 bg-pastel-purple hover:bg-purple-400 text-white rounded-xl py-2 text-sm font-bold shadow-sm transition">บันทึก</button>
+            <button id="cp-cancel-btn" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl py-2 text-sm font-bold shadow-sm transition">ยกเลิก</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Section: Manage Quiz -->
     <section id="manage-quiz-section" class="hidden flex-col space-y-4 fade-in py-2 h-full">
